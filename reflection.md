@@ -7,10 +7,18 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+The PawPal+ System is broken down into 4 main classes: Owner, Pet, Task, and Scheduler. The owner houses the different pets along with the list of tasks that reference the specific pet they are for. The Pet class hold the standard information of a pet. The Task class allows user to update tasks, mark them as complete, and review task information. The Scheduler attributes the Owner class in order to utilize designated availability and task data to generate a daily schedule.
+
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+
+Yes, changes made due to:
+* Dead/stale method references 
+    - changed code during construction but forgot to remove all references
+* Missing Relationships
+    - Owner attribute for Scheduler was not properly assigned
 
 ---
 
