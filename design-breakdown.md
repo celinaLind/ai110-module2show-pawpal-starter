@@ -9,13 +9,10 @@
 #### Attributes:
 - name (str)
 - pets (list -> Pet)
-- tasks (list -> Task) — owner-level task list; tasks reference a pet
 - availability (dict) — e.g. {"Monday": (11, 4), ..., "Sunday": (1, 3)}
     
 #### Methods:
 - add_pet(name, age, species, breed=None) → creates a Pet object and appends it to pets
-- add_task(task) → appends a Task object to tasks
-- remove_task(task) → removes a task from the owner's task list
 - get_tasks_for_pet(pet) → returns filtered list of tasks referencing a specific pet
 - update_availability(day, start_time, duration) → updates a single day's availability window
 
@@ -27,8 +24,11 @@
 - species (str) — e.g. "dog", "cat"
 - breed (str, optional)
 - medical_notes (str, optional) — e.g. allergies, conditions relevant to task logic
+- tasks: (list  -> Task) — a list of tasks for specific pet
 
 #### Methods:
+- add_task() → adds a new Task item to pet's task list
+- remove_task() → deletes a task from the pet's task list
 - get_info() → returns a formatted summary string of the pet's details
 
 
@@ -36,7 +36,6 @@
 #### Attributes:
 - name (str)
 - task_type (str) — one of: "feeding", "walk", "medication", "appointment", "grooming", "training", "other"
-- pet (Pet) — reference to the associated pet
 - description (str)
 - duration (float) — in hours
 - priority (int) — e.g. 1 (highest) to 5 (lowest)
