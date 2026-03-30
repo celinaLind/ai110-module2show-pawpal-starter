@@ -63,3 +63,26 @@ The scheduler uses a greedy algorithm with gap-filling to build a weekly plan fr
 **Filtering:**
 - After generating a schedule, the UI lets you filter the view by pet name and/or completion status (All / Incomplete / Completed).
 - Days with no matching tasks are hidden automatically.
+
+
+### Testing PawPal+
+
+Run the test suite with:
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+The tests cover the following behaviors:
+
+- **Task completion** — verifies that `mark_complete()` correctly updates a task's status
+- **Pet task tracking** — confirms that adding tasks to a pet increases its task count
+- **One-time task deduplication** — ensures a One-time task appears in the schedule on only one day across a multi-day week
+- **Chronological sorting** — verifies that tasks added out of order are scheduled in correct time order
+- **Gap-filling** — confirms that a flexible task is inserted into open time before an anchored task rather than pushed to the end
+- **Overflow handling** — checks that tasks exceeding the available time window are surfaced by `get_unscheduled_tasks()`
+- **Conflict detection** — verifies that two tasks sharing the same preferred time trigger a conflict warning
+
+
+#### Confidence Level - 5 Stars
+Passed all 7 tests in 0.13s
