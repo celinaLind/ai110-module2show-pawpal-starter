@@ -69,19 +69,65 @@ class Scheduler:
 
     def generate_schedule(self):
         """Builds a weekly schedule by matching tasks to the owner's availability windows."""
+        scheduled_once = set()
         for day, (start_time, duration) in self.owner.availability.items():
-            daily_tasks = []
+            fitted, total = [], 0
             for pet in self.owner.pets:
-                daily_tasks.extend([task for task in pet.tasks if task.preferred_time == start_time])
-            self.schedule[day] = self._prioritize_tasks(daily_tasks)[:duration]
+                pet_tasks = []
+                for task in pet.tasks:
+                    if task.frequency in ("Weekly", "One-time") and id(task) in scheduled_once:
+                        continue
+                    if (not task.is_completed or task.frequency != "One-time") and (task.preferred_time is None or task.preferred_time == start_time):
+                        pet_tasks.append(task)
+                for task in self._prioritize_tasks(pet_tasks):
+                    if total + task.duration <= duration:
+                        fitted.append(task)
+                        total += task.duration
+                        if task.frequency in ("Weekly", "One-time"):
+                            scheduled_once.add(id(task))
+            self.schedule[day] = fitted
             self.assign_time(self.schedule[day], start_time)
 
     def assign_time(self, tasks: list[Task], start_time: int):
-        """Assigns a sequential scheduled_time to each task based on the start time and durations."""
+        """Assigns scheduled times, filling gaps before anchored tasks with flexible high-priority tasks."""
+        anchored = [t for t in tasks if t.preferred_time is not None]
+        flexible = [t for t in tasks if t.preferred_time is None]
+
         current_time = start_time
-        for task in tasks:
-            task.scheduled_time = current_time
-            current_time += task.duration
+        flex_idx = 0
+
+        for task in anchored:
+            # fill gap before this anchored task with flexible tasks that fit
+            while flex_idx < len(flexible):
+                ft = flexible[flex_idx]
+                if current_time + ft.duration <= task.preferred_time:
+                    ft.scheduled_time = current_time
+                    current_time += ft.duration
+                    flex_idx += 1
+                else:
+                    break
+            # schedule anchored task at its preferred time or current_time if we've passed it
+            task.scheduled_time = max(current_time, task.preferred_time)
+            current_time = task.scheduled_time + task.duration
+
+        # schedule any remaining flexible tasks after all anchored tasks
+        while flex_idx < len(flexible):
+            flexible[flex_idx].scheduled_time = current_time
+            current_time += flexible[flex_idx].duration
+            flex_idx += 1
+
+    def detect_conflicts(self):
+        """Checks for anchored tasks pushed past their preferred time and tasks running past the availability window."""
+        conflicts = []
+        for day, tasks in self.schedule.items():
+            start_time, duration = self.owner.availability[day]
+            end_time = start_time + duration
+            for task in tasks:
+                if task.preferred_time is not None and task.scheduled_time > task.preferred_time:
+                    conflicts.append(f"{day}: '{task.name}' wanted at {task.preferred_time}:00 but scheduled at {task.scheduled_time}:00")
+                if task.scheduled_time + task.duration > end_time:
+                    conflicts.append(f"{day}: '{task.name}' runs until {task.scheduled_time + task.duration}:00, past availability window ending at {end_time}:00")
+        return conflicts
 
     def get_schedule_for_pet(self, pet: Pet):
         """Returns a filtered schedule containing only tasks belonging to the given pet."""
@@ -101,15 +147,11 @@ class Scheduler:
             for task in tasks:
                 print(f" {task.scheduled_time} - {task.name} ({task.task_type}): {task.description} [Duration: {task.duration}h, Priority: {task.priority}]")
 
-    def _prioritize_tasks(self, tasks: list[Task]):
-        """Sorts tasks by priority then duration (lowest values first)."""
-        return sorted(tasks, key=lambda t: (t.priority, t.duration))
+    def get_unscheduled_tasks(self):
+        """Returns tasks that were not fit into any day of the schedule."""
+        scheduled = {id(task) for tasks in self.schedule.values() for task in tasks}
+        return [task for pet in self.owner.pets for task in pet.tasks if id(task) not in scheduled]
 
-    def get_combined_schedule(self):
-        """Returns the full schedule across all pets."""
-        combined_tasks = {
-            day: [task for task in tasks if task in pet.tasks]
-            for day, tasks in self.schedule.items()
-            for pet in self.owner.pets
-        }
-        return combined_tasks
+    def _prioritize_tasks(self, tasks: list[Task]):
+        """Sorts anchored tasks (has preferred_time) by time, then flexible tasks by priority. Duration is the tiebreaker."""
+        return sorted(tasks, key=lambda t: (t.preferred_time if t.preferred_time is not None else float("inf"), t.priority, t.duration))
