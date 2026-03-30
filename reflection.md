@@ -29,10 +29,14 @@ Yes, changes made due to:
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+The schedule considers preferred time then priority then duration. I identified that when the owner wants to do the task is more important because they probably want to do it at that time for a specific reason. Priority is second in consideration for the obvious reason of being key in knowing if a task NEEDS to get done that day or could fall to another day. Finally duration provides the indicator of if said task will fit in allocated timeframe.
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+The scheduler makes a tradeoff by using two greedy passes rather than finding the mathematically optimal arrangement. First it selects tasks by preferred time and priority, then fills remaining gaps with flexible tasks in priority order. This means a suboptimal combination could slip through if a lower-priority task blocks a better fit later. This is reasonable for a pet care scenario because the owner's limited time should go toward the most important tasks first, and a predictable priority-based plan is more practical than exhaustively searching every possible arrangement.
 
 ---
 
