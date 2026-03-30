@@ -41,3 +41,25 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+
+### Smarter Scheduling
+
+The scheduler uses a greedy algorithm with gap-filling to build a weekly plan from the owner's availability windows.
+
+**How tasks are sorted and placed:**
+- Tasks with a `preferred_time` (anchored tasks) are placed at their requested time slot.
+- Tasks without a `preferred_time` (flexible tasks) are sorted by priority and inserted into any open gaps before anchored tasks.
+- If a gap is too small for a flexible task, it is placed after all anchored tasks instead.
+
+**Recurring task handling:**
+- `Daily` tasks are scheduled every day.
+- `Weekly` and `One-time` tasks are scheduled only once across the full week using an ID-based deduplication set.
+
+**Conflict detection:**
+- The scheduler flags any anchored task that was pushed past its preferred start time.
+- It also flags any task that runs past the end of the owner's availability window for that day.
+
+**Filtering:**
+- After generating a schedule, the UI lets you filter the view by pet name and/or completion status (All / Incomplete / Completed).
+- Days with no matching tasks are hidden automatically.

@@ -67,18 +67,23 @@ class Scheduler:
         self.owner = owner
         self.schedule: dict[str, list[Task]] = {}  # e.g., {"Monday": [Task, Task, ...]}
 
+    def _is_eligible(self, task: Task, start_time: int, duration: int, scheduled_once: set) -> bool:
+        """Returns True if a task should be considered for scheduling in a given availability window."""
+        if task.frequency in ("Weekly", "One-time") and id(task) in scheduled_once:
+            return False
+        if task.is_completed and task.frequency == "One-time":
+            return False
+        if task.preferred_time is not None and not (start_time <= task.preferred_time < start_time + duration):
+            return False
+        return True
+
     def generate_schedule(self):
         """Builds a weekly schedule by matching tasks to the owner's availability windows."""
         scheduled_once = set()
         for day, (start_time, duration) in self.owner.availability.items():
             fitted, total = [], 0
             for pet in self.owner.pets:
-                pet_tasks = []
-                for task in pet.tasks:
-                    if task.frequency in ("Weekly", "One-time") and id(task) in scheduled_once:
-                        continue
-                    if (not task.is_completed or task.frequency != "One-time") and (task.preferred_time is None or task.preferred_time == start_time):
-                        pet_tasks.append(task)
+                pet_tasks = [task for task in pet.tasks if self._is_eligible(task, start_time, duration, scheduled_once)]
                 for task in self._prioritize_tasks(pet_tasks):
                     if total + task.duration <= duration:
                         fitted.append(task)
