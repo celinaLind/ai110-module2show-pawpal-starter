@@ -12,7 +12,7 @@ A busy pet owner needs help staying consistent with pet care. They want an assis
 
 Your job is to design the system first (UML), then implement the logic in Python, then connect it to the Streamlit UI.
 
-## What you will build
+<!-- ## What you will build
 
 Your final app should:
 
@@ -20,7 +20,18 @@ Your final app should:
 - Let a user add/edit tasks (duration + priority at minimum)
 - Generate a daily schedule/plan based on constraints and priorities
 - Display the plan clearly (and ideally explain the reasoning)
-- Include tests for the most important scheduling behaviors
+- Include tests for the most important scheduling behaviors -->
+
+## Features
+
+- **Priority-based scheduling** — tasks are ranked by priority so the most important care happens first within each availability window
+- **Chronological sorting** — anchored tasks (with a `preferred_time`) are placed at their requested time and sorted in time order, regardless of the order they were added
+- **Gap-filling** — flexible tasks (no `preferred_time`) are inserted into open gaps between anchored tasks by priority, maximizing use of available time
+- **Daily recurrence** — daily tasks are scheduled every day of the week automatically
+- **One-time and weekly deduplication** — `One-time` and `Weekly` tasks are scheduled only once across the full week, preventing repeats
+- **Overflow surfacing** — tasks that don't fit within the available time window are flagged and listed separately so nothing is silently dropped
+- **Conflict warnings** — the scheduler detects and reports when an anchored task is pushed past its preferred time or when any task runs past the end of the availability window
+- **Schedule filtering** — the UI supports filtering the generated schedule by pet name and/or completion status
 
 ## Getting started
 
@@ -86,3 +97,7 @@ The tests cover the following behaviors:
 
 #### Confidence Level - 5 Stars
 Passed all 7 tests in 0.13s
+
+
+### In progress
+Frontend updates to be more user-friendly and incorporate all backend functionality.
