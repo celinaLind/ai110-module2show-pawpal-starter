@@ -108,3 +108,5 @@ I would have started simpler, during the design phase I was thinking as if this 
 - What is one important thing you learned about designing systems or working with AI on this project?
 
 Start with the MVP and expand from there.
+
+I forgot to add the recurrence logic behavior: Daily tasks are re-scheduled each day but there's no logic that marks a daily task complete and automatically creates a new instance for the next day. The reset() method exists on Task but nothing calls it automatically.
