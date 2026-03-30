@@ -1,6 +1,11 @@
 import streamlit as st
 from pawpal_system import Owner, Pet, Task, Scheduler
 
+def format_time(t):
+    h = int(t)
+    m = int((t % 1) * 60)
+    return f"{h:02}:{m:02}"
+
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
 st.title("🐾 PawPal+")
@@ -110,12 +115,24 @@ if st.button("Generate schedule"):
     st.session_state.scheduler = Scheduler(st.session_state.owner)  # Create scheduler instance
     st.session_state.scheduler.generate_schedule()  # Populates self.schedule internally
 
+    # Filter controls
+    pet_names = [pet.name for pet in st.session_state.owner.pets]
+    col1, col2 = st.columns(2)
+    with col1:
+        pet_filter = st.selectbox("Filter by pet", ["All pets"] + pet_names)
+    with col2:
+        status_filter = st.selectbox("Filter by status", ["All", "Incomplete", "Completed"])
+
+    selected_pet = None if pet_filter == "All pets" else pet_filter
+    selected_status = None if status_filter == "All" else (status_filter == "Completed")
+    filtered = st.session_state.scheduler.filter_schedule(pet_name=selected_pet, completed=selected_status)
+
     # Display the schedule in a more user-friendly way
     st.write("Schedule:")
-    for day, tasks in st.session_state.scheduler.schedule.items():
+    for day, tasks in filtered.items():
         st.write(f"**{day}**:")
         for task in tasks:
-            st.write(f"- {task.name} at {task.scheduled_time}:00 for {task.duration} hours (Priority: {task.priority})")
+            st.write(f"- {task.name} at {format_time(task.scheduled_time)} for {task.duration} hrs (Priority: {task.priority})")
 
     unscheduled = st.session_state.scheduler.get_unscheduled_tasks()
     if unscheduled:

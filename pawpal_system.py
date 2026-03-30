@@ -116,6 +116,21 @@ class Scheduler:
             current_time += flexible[flex_idx].duration
             flex_idx += 1
 
+    def filter_schedule(self, pet_name: str = None, completed: bool = None):
+        """Returns a filtered schedule by pet name and/or completion status. Pass None to skip that filter."""
+        result = {}
+        for day, tasks in self.schedule.items():
+            filtered = []
+            for task in tasks:
+                if pet_name is not None and not any(task in pet.tasks for pet in self.owner.pets if pet.name == pet_name):
+                    continue
+                if completed is not None and task.is_completed != completed:
+                    continue
+                filtered.append(task)
+            if filtered:
+                result[day] = filtered
+        return result
+
     def detect_conflicts(self):
         """Checks for anchored tasks pushed past their preferred time and tasks running past the availability window."""
         conflicts = []
